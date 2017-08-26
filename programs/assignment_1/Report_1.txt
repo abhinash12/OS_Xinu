@@ -1,0 +1,32 @@
+
+What is Orphan and Zombie processes?
+
+Orphan process
+
+A process which is running even after its parent process is finished running or terminated. It's called orphan because the process that created no longer exists.
+
+
+
+Zombie process
+
+A process which has completed execution but still has an entry in the process table. It is also called defunct process. These process are said to be in the terminated state.
+
+
+What are the changes that occur when the child process calls the exec system call to execute a new program?
+
+When a child process executes exec system call, it replaces the previous executable. It begins executing the new program from the begining so that 
+the exec call doesn't encounter with an error. A new process is not created but the code, data, heap, and stack of the process is replaces with the new program.
+ 
+
+References:
+http://www.makelinux.net/alp/024
+https://en.wikipedia.org/wiki/Orphan_process
+https://en.wikipedia.org/wiki/Zombie_process
+https://stackoverflow.com/questions/1653340/differences-between-fork-and-exec
+http://www.makelinux.net/alp/024
+http://tldp.org/LDP/lpg/node11.html
+
+collaborated with Aniket
+
+
+
