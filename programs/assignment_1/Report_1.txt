@@ -15,7 +15,7 @@ A process which has completed execution but still has an entry in the process ta
 What are the changes that occur when the child process calls the exec system call to execute a new program?
 
 When a child process executes exec system call, it replaces the previous executable. It begins executing the new program from the begining so that 
-the exec call doesn't encounter with an error. A new process is not created but the code, data, heap, and stack of the process is replaces with the new program.
+the exec call doesn't encounter with an error. A new process is not created but the code, data, heap, and stack of the process is replaced with the new program.
  
 
 References:
