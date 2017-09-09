@@ -1,101 +1,95 @@
-#include <stdio.h>
 #include <xinu.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdlib.h> 
+#include <stdio.h>
+#include <process_ring.h>
 
-
-void print_usage()
-  printf("Usage: process_ring\n");
-
-
-
-void polling_init(int32 p, int32 mailbox[]) {
-	for (int32 i=0; i<p; i++) 
-		resume(create(polling, 1024, 20, "polling", 3, i, mailbox[i], &mailbox, p));
+void print_usage(void){
+    printf("Usage: ...\n");
 }
-
-process polling(int32 index, int32 countdown, volatile int32 *mailbox, int32 len) {
-	int32 last = countdown+1;
-	int32 round = 0;
-	while (last>0) {
-		int32 tmp = *mailbox[index]
-		if (last!=temp) {
-			printf("Ring Element %d : Round %d : Value %d\n", index, round, tmp);
-			last = tmp;
-			round += 1;
-			*mailbox[(index+1)%len] = tmp-1;
-		}
-	}
-	return OK;
+int32 p;
+int32 r;
+volatile int32 rounds;
+shellcmd xsh_process_ring(int argc, char *args[])
+{
+    p = 2; /* ispecified defaults */
+    r = 3;
+    rounds = 0;
+    int32 i,j,k;
+    char sync = 'p';
+    for(i = 1; i < argc; i++){
+        if (0 == strncmp("-p", args[i], 3)){
+            if (! (i + 1 < argc)) {
+                print_usage();
+                printf("-p flag expected an argument\n");
+                return SHELL_ERROR;
+            }
+            p = atoi(args[i + 1]);
+            if (!(0 <= p && p <= 64)) {
+                /* The number is out of range */
+                print_usage();
+                printf("-p flag expected a number between 0 - 64\n");
+                return SHELL_ERROR;
+            }
+            i += 1;
+        }
+        else if (0 == strncmp("-r", args[i], 3)) {
+            if (! (i + 1 < argc)) {
+                print_usage();
+                printf("-r flag expected an argument\n");
+                return SHELL_ERROR;
+            }
+            r = atoi(args[i + 1]);
+            if (!(r > 0)) {
+                print_usage();
+                printf("-r flag expected a number greater than 0\n");
+                return SHELL_ERROR;
+            }
+            i += 1;
+        }
+        else if(0 == strncmp("-i", args[i], 3)) {
+            if(0 == strncmp("sync", args[i+1], 4))
+            {
+                sync = 's';
+            }
+            else if(!(0 == strncmp("poll", args[i+1], 4)))
+            {
+                print_usage();
+                printf("-i flag expected either POLL or SYNC\n");
+                return SHELL_ERROR;
+            }
+            i += 1;
+        }
+        else{
+            print_usage();
+            printf("invalid flag");
+        }
+    }
+    printf("Number of Processes: %d\n",p);
+    printf("Number of Rounds: %d\n",r);
+    volatile int32 countdown = (p * r) - 1;
+    if(sync == 'p')
+    {
+        volatile int32 mailbox[p];
+        mailbox[0] = countdown;
+        for(k=1;k<p;k++)
+            mailbox[k] = -1;
+        for(j=0;j<p;j++)
+        {
+            resume(create(process_ring,1024,20,"polling",3,j,&countdown,mailbox));
+        }
+        while(countdown >= 0);
+    }
+    else if(sync == 's')
+    {
+	pid32 parent_pid = getpid();
+        volatile pid32 msgpass[p];
+        for(j=0;j<p;j++)
+        {
+            msgpass[j] = create(process_ring_message,1024,20,"messagepassing",3,j,msgpass,parent_pid);
+            resume(msgpass[j]);
+        }
+        send(msgpass[0],countdown);
+	receive();
+    }
+    return SHELL_OK;
 }
-	
-shellcmd xsh_process_ring(int argc, char *args[]) {
-	int32 p = 2; /* specified defaults */
-	int32 r = 3;
-	char implementation[80] = "poll";
-	int32 arr[p], mailbox[p], i;
-	if (argc>1) {
-		for(i = 1; i < argc; i++){
-			if (!strncmp("-p", args[i], 3)){
-				/* parse numeric argument to -p */
-				if (!(i+1<argc)) {
-					/* No argument after flag */
-					print_usage();
-					printf("-p flag expected an argument\n");
-					return SHELL_ERROR;
-				}
-				p = atoi(args[i+1]);
-				if (!(0 <= p && p <= 64)) {
-				/* The number is out of range */
-					print_usage();
-					printf("-p flag expected a number between 0 - 64\n");
-					return SHELL_ERROR;
-				}
-				i += 1; 
-			} else if (!strncmp("-r", args[i], 3)) {
-				if (!(i+1<argc)) {
-					/* No argument after flag */
-					print_usage();
-					printf("-r flag expected an argument\n");
-					return SHELL_ERROR;
-				}
-				r = atoi(args[i+1]);
-				if (!(0 <= r && r <= 100)) {
-				/* The number is out of range */
-					print_usage();
-					printf("-r flag expected a number between 0 - 100\n");
-					return SHELL_ERROR;
-				}
-				i += 1; 
-			} else if (!strncmp("--help", args[i], 7)) {
-				if ((i+1<argc)) {
-					print_usage();
-					printf("--help flag does not take any arguments\n");
-					return SHELL_ERROR;
-				}
-				print_usage();
-                printf("\nDescription:\n");
-                printf("\tCoordinates processes to count from some number down to zero\n");
-                printf("Options:\n");
-                printf("\t-p\tthe number of processes <0-64> (default 2)\n");
-                printf("\t-r\tthe number of rounds (default 3)\n");
-                printf("\t-i\tthe implementation <poll or sync> (default poll)\n");
-                printf("\t--help\tdisplay this help and exit\n");
-				i += 1; 
-			} else {
-				printf("process_ring: invalid argument\n");
-				printf("Try 'process_ring --help' for more information\n");
-			} 	
-		}
-	} 
-	for (i=0; i<p; i++)
-		arr[i] = i
-	mailbox[0] = p*r-1;
-	printf("%s\n", implementation);
-	printf("Number of processes: %d\n", p);
-	printf("Number of rounds: %d\n", r);
-	if(!strncmp(implementation,"poll"))
-		polling_init(p, mailbox[])
-	return SHELL_OK;
-}
-
