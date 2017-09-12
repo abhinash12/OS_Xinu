@@ -11,7 +11,7 @@ int32 r;
 volatile int32 rounds;
 shellcmd xsh_process_ring(int argc, char *args[])
 {
-    p = 2; /* ispecified defaults */
+    p = 2; /*  defaults values*/
     r = 3;
     rounds = 0;
     int32 i,j,k;
@@ -25,7 +25,7 @@ shellcmd xsh_process_ring(int argc, char *args[])
             }
             p = atoi(args[i + 1]);
             if (!(0 <= p && p <= 64)) {
-                /* The number is out of range */
+                /* Processes out of range */
                 print_usage();
                 printf("-p flag expected a number between 0 - 64\n");
                 return SHELL_ERROR;
@@ -46,7 +46,8 @@ shellcmd xsh_process_ring(int argc, char *args[])
             }
             i += 1;
         }
-        else if(0 == strncmp("-i", args[i], 3)) {
+        else if(0 == strncmp("-i", args[i], 3))
+	 {
             if(0 == strncmp("sync", args[i+1], 4))
             {
                 sync = 's';
@@ -59,11 +60,13 @@ shellcmd xsh_process_ring(int argc, char *args[])
             }
             i += 1;
         }
-        else{
+        else
+	{
             print_usage();
             printf("invalid flag");
         }
     }
+    // for other processes and round values
     printf("Number of Processes: %d\n",p);
     printf("Number of Rounds: %d\n",r);
     volatile int32 countdown = (p * r) - 1;
@@ -79,16 +82,17 @@ shellcmd xsh_process_ring(int argc, char *args[])
         }
         while(countdown >= 0);
     }
+    // when messaging is involved
     else if(sync == 's')
     {
 	pid32 parent_pid = getpid();
-        volatile pid32 msgpass[p];
+        volatile pid32 messagepass[p];
         for(j=0;j<p;j++)
         {
-            msgpass[j] = create(process_ring_message,1024,20,"messagepassing",3,j,msgpass,parent_pid);
-            resume(msgpass[j]);
+            messagepass[j] = create(process_ring_message,1024,20,"messagepassing",3,j,messagepass,parent_pid);
+            resume(messagepass[j]);
         }
-        send(msgpass[0],countdown);
+        send(messagepass[0],countdown);
 	receive();
     }
     return SHELL_OK;
